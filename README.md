@@ -55,3 +55,21 @@ Supabase hosts the database, authentication and private file storage; it is not 
 - MITRE ATT&CK: https://attack.mitre.org/
 - Supabase RLS: https://supabase.com/docs/guides/database/postgres/row-level-security
 - Supabase Storage access control: https://supabase.com/docs/guides/storage/security/access-control
+
+
+## Security operations workspace modules
+
+The authenticated workspace now includes:
+
+- **Overview analytics:** live charts for finding severity and six-month finding volume, based on records entered in the workspace.
+- **Asset inventory:** ownership/authorization status, environment, criticality, scope, owner and review date.
+- **Security engineering:** control validation log with framework, reviewer, next review and evidence.
+- **VAPT:** detailed vulnerability records with severity, CVSS, CVE/CWE, affected asset, workflow status, due date, remediation and attachments; search and severity filters.
+- **Web application security:** application/API test cases by endpoint, category, HTTP method and result, with evidence.
+- **Cloud security:** cloud resource inventory, provider, environment, exposure, criticality, posture and evidence charts.
+- **Security intel:** manually curated IOC/advisory notebook with source provenance and confidence.
+- **Incident desk:** incident, tabletop, detection-test and post-incident review records.
+- **Projects, learning and Hall of Fame:** expanded metadata and evidence uploads.
+- **Reference library:** private bookmarks for useful documentation, tools, papers and advisories.
+
+All new records reuse `public.workspace_items` and its existing per-user RLS policies. Attachments reuse the private `security-evidence` bucket and its per-user folder policies. Supported evidence types remain PDF, PNG, JPEG, TXT, CSV, JSON and ZIP, up to 20 MB per file. The charts visualize manually entered records; the workspace does not run scans, ingest live SIEM events, or automatically enrich threat indicators.
