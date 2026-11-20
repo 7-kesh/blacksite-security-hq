@@ -37,7 +37,7 @@ function renderRiskDashboard(){
  const scores=[0,0,0,0];active.forEach(x=>{const s=findingRiskScore(x);scores[s>=9?3:s>=7?2:s>=4?1:0]++});
  drawChart("riskScoreChart","doughnut",["Low <4","Medium 4–6.9","High 7–8.9","Critical 9+"],scores,"Risk score");
  const matrix=Array.from({length:5},()=>Array(5).fill(0));
- active.forEach(x=>{const l=Math.min(5,Math.max(1,Number(x.content?.likelihood)||Math.ceil(findingRiskScore(x)/2)||1)),im=Math.min(5,Math.max(1,Number(x.content?.impact)||Math.ceil(findingRiskScore(x)/2)||1));matrix[5-l][im-1]++});
+ active.forEach(x=>{const l=Number(x.content?.likelihood),im=Number(x.content?.impact);if(l>=1&&l<=5&&im>=1&&im<=5)matrix[5-l][im-1]++});
  $("#riskHeatmap").innerHTML='<div class="heat-axis">L</div>'+matrix.map((row,r)=>'<div class="heat-row"><span class="heat-y">'+(5-r)+'</span>'+row.map((n,c)=>{const s=(5-r)*(c+1);return '<div class="heat-cell heat-'+(s>=20?"critical":s>=12?"high":s>=6?"medium":"low")+'" title="Likelihood '+(5-r)+' × impact '+(c+1)+': '+n+' finding(s)">'+n+'</div>'}).join("")+'</div>').join("")+'<div class="heat-x"></div>'+[1,2,3,4,5].map(n=>'<span class="heat-x-label">'+n+'</span>').join("");
  $("#overdueList").innerHTML=overdue.length?overdue.slice(0,5).map(x=>recordCard(x,"Due "+findingDueDate(x).toLocaleDateString()+" · "+findingAgeDays(x)+" days old","finding")).join(""):'<p class="empty">No overdue open findings.</p>';
  const oldest=[...active].sort((x,y)=>findingAgeDays(y)-findingAgeDays(x)).slice(0,5);
@@ -119,7 +119,7 @@ function render(){
  renderCharts();
  renderRiskDashboard();
 }
-function view(id){$$(".view").forEach(x=>x.classList.toggle("active",x.id===id));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));$("#crumb").textContent=id.toUpperCase();$("#heading").textContent=({overview:"Security command center",engineering:"Security Engineering",vapt:"VAPT & Penetration Testing",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Security Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",projects:"Projects & Evidence",tracker:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"})[id];window.scrollTo({top:0,behavior:"smooth"})}
+function view(id){$$(".view").forEach(x=>x.classList.toggle("active",x.id===id));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));$("#crumb").textContent=id.toUpperCase();$("#heading").textContent=({overview:"Security command center",engineering:"Security Engineering",vapt:"VAPT & Penetration Testing",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Security Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",projects:"Projects & Evidence",tracker:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"})[id];if(id==="vapt")renderRiskDashboard();window.scrollTo({top:0,behavior:"smooth"})}
 function showWorkspace(){ $("#authGate").classList.add("hidden");$("#signOut").style.display="inline-block" }
 function showAuth(){ $("#authGate").classList.remove("hidden");$("#signOut").style.display="none" }
 async function authenticate(){
