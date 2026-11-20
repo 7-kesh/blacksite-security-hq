@@ -1,0 +1,58 @@
+name: Refresh BLACKSITE Cyber News
+on:
+  schedule:
+    - cron: "30 2 * * *"
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      period:
+        description: Which briefing to refresh
+        required: true
+        type: choice
+        options: [daily, weekly]
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: blacksite-cyber-news
+  cancel-in-progress: false
+jobs:
+  refresh-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Select briefing period
+        id: period
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "value=${{ inputs.period }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "0 3 * * 1" ]]; then
+            echo "value=weekly" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=daily" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Fetch and curate security feeds
+        run: node scripts/update-cyber-news.mjs ${{ steps.period.outputs.value }}
+      - name: Commit refreshed briefing
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/daily.json data/weekly.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: refresh ${{ steps.period.outputs.value }} cyber news"
+            git push
+          else
+            echo "No briefing changes to commit."
+          fi
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Deploy updated site
+        id: deployment
+        uses: actions/deploy-pages@v4
