@@ -7,7 +7,13 @@ const tracks={
 };
 const cfg=window.BLACKSITE_SUPABASE;
 const client=window.supabase?.createClient(cfg?.url,cfg?.publishableKey);
-const starter={projects:[],labs:[],findings:[],evidence:[],achievements:[],checks:{},activity:[]};
+const starter={projects:[],labs:[],findings:[],evidence:[],achievements:[],controls:[],appTests:[],cloudAssets:[],intel:[],incidents:[],assets:[],references:[],checks:{},activity:[]};
+const charts={};
+const severityValue=v=>({informational:"info"}[String(v||"").toLowerCase()]||String(v||"").toLowerCase());
+function recordCard(r,meta,kind){return '<div class="record"><div><b>'+safe(r.title)+'</b><small>'+safe(meta||"")+'</small>'+(r.content?.notes?'<small>'+safe(r.content.notes)+'</small>':"")+(r.reference_url&&/^https?:\\/\\//i.test(r.reference_url)?'<small><a href="'+safe(r.reference_url)+'" target="_blank" rel="noopener noreferrer">Open source ↗</a></small>':"")+(r.content?.path?'<small><button type="button" class="inline-link" data-evidence="'+safe(r.id)+'" data-path="'+safe(r.content.path)+'">Open attachment ↗</button></small>':"")+'</div><button data-remove="'+kind+'" data-id="'+safe(r.id)+'">Remove</button></div>'}
+function drawChart(id,type,labels,values,label){if(!window.Chart)return;const c=document.getElementById(id);if(!c)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(c,{type,data:{labels,datasets:[{label,data:values,borderWidth:2,borderRadius:type==="bar"?5:0,backgroundColor:type==="doughnut"?["#ff647c","#ffad66","#f7d56b","#70c7b2","#71869d"]:"rgba(199,255,114,.18)",borderColor:"#c7ff72",tension:.35,fill:type==="line"}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:type==="doughnut",labels:{color:"#a9bbce",boxWidth:9,font:{size:10}}}},scales:type==="doughnut"?{}:{x:{ticks:{color:"#8fa3b8",font:{size:9}},grid:{color:"#24364a"}},y:{beginAtZero:true,ticks:{color:"#8fa3b8",precision:0,font:{size:9}},grid:{color:"#24364a"}}}}}})}
+function renderCharts(){const keys=["critical","high","medium","low","info"],counts=keys.map(k=>state.findings.filter(x=>severityValue(x.severity)===k).length);drawChart("severityChart","doughnut",["Critical","High","Medium","Low","Info"],counts,"Findings");drawChart("vaptChart","doughnut",["Critical","High","Medium","Low","Info"],counts,"Findings");const now=new Date(),months=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleString(undefined,{month:"short"}),year:d.getFullYear(),month:d.getMonth()})}drawChart("trendChart","line",months.map(x=>x.label),months.map(m=>state.findings.filter(x=>{const d=new Date(x.created_at||x.updated_at||0);return d.getFullYear()===m.year&&d.getMonth()===m.month}).length),"Created");drawChart("findingStatusChart","doughnut",["Open","In progress","Resolved"],[state.findings.filter(x=>!["completed","resolved","closed"].includes(x.status)).length,state.findings.filter(x=>x.status==="in_progress").length,state.findings.filter(x=>["completed","resolved","closed"].includes(x.status)).length],"Status");drawChart("cloudExposureChart","doughnut",["Public","Private","Internal","Unknown"],["Public","Private","Internal","Unknown"].map(k=>state.cloudAssets.filter(x=>x.content?.exposure===k).length),"Exposure");drawChart("cloudPostureChart","doughnut",["Healthy","Needs review","Misconfigured","Exception"],["Healthy","Needs review","Misconfigured","Exception accepted"].map(k=>state.cloudAssets.filter(x=>x.content?.posture===k).length),"Posture")}
+async function attachEvidence(file){if(!file)return null;if(file.size>20*1024*1024)throw new Error(file.name+" exceeds 20 MB");const ext=(file.name.split(".").pop()||"").toLowerCase(),allowed=["pdf","png","jpg","jpeg","txt","csv","json","zip"];if(!allowed.includes(ext))throw new Error("Unsupported file type: "+file.name);const path=user.id+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const types={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",txt:"text/plain",csv:"text/csv",json:"application/json",zip:"application/zip"};const up=await client.storage.from("security-evidence").upload(path,file,{contentType:file.type||types[ext],upsert:false});if(up.error)throw up.error;return {filename:file.name,path,size:file.size,mime:file.type||types[ext]}}
 let state={...starter},user=null,checklistId=null,authMode="signin",busy=false;
 function safe(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setStatus(t){const el=$("#syncStatus");if(el)el.textContent=t}
@@ -16,7 +22,7 @@ function note(action,detail){state.activity.unshift({action,detail,at:new Date()
 function item(kind,title,content,status="open",severity=null,reference_url=null){return {user_id:user.id,kind,title,status,severity,content,reference_url,tags:[]}}
 function dbStatus(value){return ({"Planned":"open","In progress":"in_progress","Completed":"completed"})[value]||value}
 function dbSeverity(value){return value==="Informational"?"info":String(value||"").toLowerCase()}
-function fromRow(r){return {id:r.id,...(r.content||{}),title:r.title,status:r.status,severity:r.severity,reference_url:r.reference_url,updated_at:r.updated_at}}
+function fromRow(r){return {id:r.id,...(r.content||{}),title:r.title,status:r.status,severity:r.severity,reference_url:r.reference_url,created_at:r.created_at,updated_at:r.updated_at,content:r.content||{}}}
 async function loadWorkspace(){
  setStatus("SYNCING");
  const {data,error}=await client.from("workspace_items").select("*").order("updated_at",{ascending:false});
@@ -28,6 +34,13 @@ async function loadWorkspace(){
   if(r.kind==="learning")state.labs.push(fromRow(r));
   if(r.kind==="evidence")state.evidence.push(fromRow(r));
   if(r.kind==="achievement")state.achievements.push(fromRow(r));
+  if(r.kind==="control")state.controls.push(fromRow(r));
+  if(r.kind==="app_test")state.appTests.push(fromRow(r));
+  if(r.kind==="cloud_asset")state.cloudAssets.push(fromRow(r));
+  if(r.kind==="intel")state.intel.push(fromRow(r));
+  if(r.kind==="incident")state.incidents.push(fromRow(r));
+  if(r.kind==="asset")state.assets.push(fromRow(r));
+  if(r.kind==="reference")state.references.push(fromRow(r));
   if(r.kind==="note")state.activity.push({action:r.title,detail:r.content?.detail||"",at:r.created_at});
   if(r.kind==="checklist"&&r.title==="checklist-progress"){state.checks=r.content?.checks||{};checklistId=r.id}
  }
@@ -61,8 +74,18 @@ function render(){
  $("#hallCount").textContent=state.achievements.length+" ITEMS";
  $("#hallList").innerHTML=state.achievements.length?state.achievements.map(x=>{const c=x.content||{},url=/^https?:\/\//i.test(x.reference_url||"")?'<a href="'+safe(x.reference_url)+'" target="_blank" rel="noopener noreferrer">View source ↗</a>':"";return '<div class="record hall-record"><div><span class="hall-category">'+safe(c.category||"Achievement")+'</span><b>'+safe(x.title)+'</b><small>'+safe(c.issuer||"")+(c.date?" · "+safe(c.date):"")+'</small>'+(c.description?'<p>'+safe(c.description)+'</p>':"")+'<div class="hall-links">'+url+(c.path?'<button type="button" data-hall-evidence="'+safe(x.id)+'">Open attachment ↗</button>':"")+'</div></div><button data-remove="achievement" data-id="'+safe(x.id)+'">Remove</button></div>'}).join(""):'<p class="empty">Your Hall of Fame is ready. Add your first award, certificate, achievement or published paper above.</p>';
 
+ $("#controlList").innerHTML=state.controls.length?state.controls.map(x=>recordCard(x,[x.content?.framework,x.status,x.content?.owner,x.content?.review].filter(Boolean).join(" · "),"control")).join(""):'<p class="empty">No control validations logged yet.</p>';
+ $("#appTestList").innerHTML=state.appTests.length?state.appTests.map(x=>recordCard(x,[x.content?.asset,x.content?.endpoint,x.content?.category,x.content?.result,x.content?.method].filter(Boolean).join(" · "),"app_test")).join(""):'<p class="empty">No application test cases yet.</p>';
+ $("#cloudAssetList").innerHTML=state.cloudAssets.length?state.cloudAssets.map(x=>recordCard(x,[x.content?.provider,x.content?.environment,x.content?.exposure,x.content?.criticality,x.content?.posture].filter(Boolean).join(" · "),"cloud_asset")).join(""):'<p class="empty">No cloud assets registered yet.</p>';
+ $("#intelList").innerHTML=state.intel.length?state.intel.map(x=>recordCard(x,[x.content?.type,x.content?.confidence,x.severity,x.content?.date].filter(Boolean).join(" · "),"intel")).join(""):'<p class="empty">No intel records saved yet.</p>';
+ $("#incidentList").innerHTML=state.incidents.length?state.incidents.map(x=>recordCard(x,[x.content?.type,x.content?.status,x.severity,x.content?.date].filter(Boolean).join(" · "),"incident")).join(""):'<p class="empty">No incident or tabletop records yet.</p>';
+ $("#assetList").innerHTML=state.assets.length?state.assets.map(x=>recordCard(x,[x.content?.type,x.content?.environment,x.content?.authorization,x.content?.criticality].filter(Boolean).join(" · "),"asset")).join(""):'<p class="empty">No assets registered. Add an owned or authorized target and its scope.</p>';
+ $("#referenceList").innerHTML=state.references.length?state.references.map(x=>recordCard(x,x.content?.type,"reference")).join(""):'<p class="empty">No custom bookmarks yet.</p>';
+ const q=$("#findingSearch")?.value?.toLowerCase()||"",sev=$("#findingSeverityFilter")?.value||"";const visible=state.findings.filter(x=>(!q||[x.title,x.content?.asset,x.content?.cve,x.content?.domain].some(v=>String(v||"").toLowerCase().includes(q)))&&(!sev||severityValue(x.severity)===sev));
+ $("#findingList").innerHTML=visible.length?visible.map(x=>recordCard(x,[x.content?.domain,x.content?.asset,x.content?.cve,x.severity,x.status,x.content?.cvss?"CVSS "+x.content.cvss:"",x.content?.due_date?"Due "+x.content.due_date:""].filter(Boolean).join(" · "),"finding")).join(""):'<p class="empty">No matching findings. Capture a finding to build your risk register.</p>';
+ renderCharts();
 }
-function view(id){$$(".view").forEach(x=>x.classList.toggle("active",x.id===id));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));$("#crumb").textContent=id.toUpperCase();$("#heading").textContent=({overview:"Security command center",engineering:"Security Engineering",vapt:"VAPT & Penetration Testing",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Security Intelligence",projects:"Projects & Evidence",tracker:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"})[id];window.scrollTo({top:0,behavior:"smooth"})}
+function view(id){$$(".view").forEach(x=>x.classList.toggle("active",x.id===id));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));$("#crumb").textContent=id.toUpperCase();$("#heading").textContent=({overview:"Security command center",engineering:"Security Engineering",vapt:"VAPT & Penetration Testing",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Security Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",projects:"Projects & Evidence",tracker:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"})[id];window.scrollTo({top:0,behavior:"smooth"})}
 function showWorkspace(){ $("#authGate").classList.add("hidden");$("#signOut").style.display="inline-block" }
 function showAuth(){ $("#authGate").classList.remove("hidden");$("#signOut").style.display="none" }
 async function authenticate(){
