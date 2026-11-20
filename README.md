@@ -94,3 +94,7 @@ CSV import expects a header row with fields such as `title,severity,cvss,asset,c
 The dedicated Cyber News Intelligence page reads public RSS feeds from The Hacker News, BleepingComputer and SecurityWeek through the rss2json feed-conversion service. It deduplicates stories, sorts by publication date, and heuristically categorizes headlines into zero-days/exploitation, breaches/ransomware, threat intelligence/malware, cloud/network/application security, AI security, and tools/research/industry. Users can refresh, filter and search stories, then open the original publisher's article.
 
 Feed availability and categorization are best-effort; verify urgent claims against original reporting and official advisories such as the CISA Known Exploited Vulnerabilities catalog. The browser news reader is not a scanner or a verified threat-intelligence feed. A separate weekly ChatGPT automation produces a seven-day categorized briefing; that scheduled briefing is delivered in ChatGPT and is not automatically written into the BLACKSITE website.
+
+### Cyber News Intelligence editorial content
+
+The Cyber News page now opens with a dated weekly editorial briefing, six curated stories, defensive actions for each story, a five-step defender playbook and links to original reporting. The briefing is an editorial snapshot dated 20 November 2026; verify current affected versions and exploit status against vendor advisories before acting. The live RSS reader remains separate and refreshes publisher headlines on demand.
