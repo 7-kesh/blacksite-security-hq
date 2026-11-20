@@ -73,3 +73,17 @@ The authenticated workspace now includes:
 - **Reference library:** private bookmarks for useful documentation, tools, papers and advisories.
 
 All new records reuse `public.workspace_items` and its existing per-user RLS policies. Attachments reuse the private `security-evidence` bucket and its per-user folder policies. Supported evidence types remain PDF, PNG, JPEG, TXT, CSV, JSON and ZIP, up to 20 MB per file. The charts visualize manually entered records; the workspace does not run scans, ingest live SIEM events, or automatically enrich threat indicators.
+
+
+### Vulnerability risk command center
+
+The VAPT workspace now includes a risk dashboard with:
+- Open, overdue, critical/high and average risk-score KPIs.
+- A 5×5 likelihood/impact heatmap. Only findings with explicitly entered 1–5 likelihood and impact values are plotted.
+- Finding aging buckets and CVSS/risk-score bands.
+- Overdue remediation and oldest-open-finding lists.
+- CVSS-first scoring; if CVSS is absent, likelihood × impact is normalized to 0–10; otherwise a severity-based estimate is used.
+- Default remediation targets for findings without an explicit due date: Critical 7 days, High 30, Medium 90, Low 180, Informational 365 days.
+- CSV and JSON scan-report import with a preview and duplicate filtering against existing records and within the selected file.
+
+CSV import expects a header row with fields such as `title,severity,cvss,asset,cve,status,due_date,likelihood,impact,notes,remediation`. JSON accepts an array or an object containing a `findings`, `vulnerabilities`, or `results` array. Imported records are saved to the existing per-user RLS-protected workspace table. Importing does not run a scan or automatically validate the scanner's findings; review the preview and confirm only reports from authorized assessments.
