@@ -115,3 +115,34 @@ footer{color:#71859b;border-top-color:#25394d}
 .news-source-list a{font-size:11px;color:var(--cyan);text-decoration:none;font-weight:700}
 .news-sources>p{font-size:10px;line-height:1.6}
 @media(max-width:700px){.news-grid{grid-template-columns:1fr}.news-controls{grid-template-columns:1fr}.news-toolbar{align-items:flex-start;flex-direction:column}}
+
+
+/* Editorial Cyber News briefing */
+.briefing-hero{margin:18px 0;background:linear-gradient(120deg,#122638,#0d1b28 62%,#132b31);border-color:#426276}
+.briefing-kicker{font-size:9px;letter-spacing:1.7px;color:var(--lime);font-weight:800}
+.briefing-hero h3{font-size:23px;margin:10px 0}
+.briefing-hero>p{max-width:950px;font-size:12px;line-height:1.8;color:#c0d0df}
+.briefing-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.briefing-stats>div{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #365168;border-radius:9px;background:#ffffff06}
+.briefing-stats b{font-size:24px;color:var(--lime)}
+.briefing-stats span{font-size:10px;color:#c0d0df;line-height:1.5}
+.briefing-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:24px 0 12px}
+.briefing-heading small{font-size:9px;letter-spacing:1.5px;color:var(--cyan)}
+.briefing-heading h3{margin:5px 0;font-size:20px}
+.briefing-date{font-size:10px;color:var(--muted)}
+.briefing-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.briefing-card{display:flex;flex-direction:column;gap:12px;min-width:0}
+.briefing-card h3{font-size:15px;line-height:1.5;margin:0}
+.briefing-card>p{font-size:11px;line-height:1.75;color:var(--muted);margin:0}
+.briefing-action{display:grid;gap:5px;padding:11px;border-left:2px solid var(--lime);background:#c7ff7208;border-radius:0 7px 7px 0}
+.briefing-action b{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--lime)}
+.briefing-action span{font-size:10px;line-height:1.65;color:#c5d3df}
+.briefing-card>a{font-size:10px;color:var(--cyan);font-weight:700;text-decoration:none;margin-top:auto}
+.briefing-card>a:hover{text-decoration:underline}
+.briefing-playbook{margin:18px 0}
+.briefing-playbook h3{font-size:20px;margin:7px 0}
+.briefing-playbook>p{font-size:11px;line-height:1.7}
+.briefing-playbook ol{padding-left:20px;display:grid;gap:10px}
+.briefing-playbook li{font-size:11px;line-height:1.65;color:var(--muted);padding-left:4px}
+.briefing-playbook li b{color:var(--text)}
+@media(max-width:700px){.briefing-grid{grid-template-columns:1fr}.briefing-stats{grid-template-columns:1fr}.briefing-heading{align-items:flex-start;flex-direction:column}}
