@@ -53,9 +53,9 @@ function renderRecord(r){
  const meta=[r.kind.replaceAll("_"," "),r.content?.domain,r.content?.type,r.severity,r.status?.replaceAll("_"," ")].filter(Boolean).join(" · ");
  const details=[r.content?.asset,r.content?.cve,r.content?.framework,r.content?.provider,r.content?.endpoint,r.content?.owner,r.content?.issuer,r.content?.source,r.content?.date,r.content?.due_date].filter(Boolean).join(" · ");
  const note=r.content?.notes||r.content?.summary||r.content?.description||r.content?.detail||"";
- const attachment=r.content?.attachment;
+ const attachments=[...(r.content?.attachments||[])];if(r.content?.attachment)attachments.push(r.content.attachment);if(r.kind==="evidence"&&r.content?.path)attachments.push(r.content);
  const link=r.reference_url&&/^https?:\/\//i.test(r.reference_url)?'<a class="mini-button" href="'+escapeHtml(r.reference_url)+'" target="_blank" rel="noopener">Open link ↗</a>':"";
- const file=attachment?.path?'<button class="mini-button" type="button" data-open-file="'+escapeHtml(attachment.path)+'">Evidence ↗</button>':"";
+ const file=attachments.map((item,index)=>item?.path?'<button class="mini-button" type="button" data-open-file="'+escapeHtml(item.path)+'">Evidence '+(index+1)+' ↗</button>':"").join("");
  return '<article class="record"><div class="record-main"><div class="record-title">'+escapeHtml(r.title)+'</div><div class="record-meta">'+escapeHtml(meta)+'</div>'+(details?'<div class="record-meta">'+escapeHtml(details)+'</div>':"")+(note?'<div class="record-notes">'+escapeHtml(note)+'</div>':"")+'</div><div class="record-actions">'+(r.severity?'<span class="pill '+escapeHtml(r.severity)+'">'+escapeHtml(r.severity)+'</span>':"")+(r.status?'<span class="pill '+escapeHtml(r.status)+'">'+escapeHtml(r.status.replaceAll("_"," "))+'</span>':"")+link+file+'<button class="mini-button danger" type="button" data-delete="'+escapeHtml(r.id)+'">Delete</button></div></article>';
 }
 function renderLists(){
@@ -125,11 +125,16 @@ async function submitRecord(form){
  if(kind==="incident"&&status==="closed")status="completed";
  const reference=String(fd.get("reference_url")||"").trim()||null;
  const payload={user_id:currentUser.id,kind,title,status,severity,content,reference_url:reference,tags:content.tags||[]};
- const {error}=await client.from("workspace_items").insert(payload);
+ const {data,error}=await client.from("workspace_items").insert(payload).select().single();
  if(error)throw error;
+ if(kind==="project"){
+   const attachments=[...(content.attachments||[])];if(content.attachment)attachments.push(content.attachment);
+   for(const attachment of attachments){const evidenceRow={user_id:currentUser.id,kind:"evidence",title:attachment.filename||"Project evidence",status:"completed",severity:null,content:{...attachment,project_id:data.id,project_title:title},reference_url:null,tags:[]};const saved=await client.from("workspace_items").insert(evidenceRow);if(saved.error)throw saved.error;}
+ }
 }
 async function removeRecord(id){
  const record=records.find(r=>r.id===id);
+ if(record?.content?.path){const {error}=await client.storage.from(bucket).remove([record.content.path]);if(error)throw error;}
  if(record?.content?.attachment?.path){const {error}=await client.storage.from(bucket).remove([record.content.attachment.path]);if(error)throw error;}
  if(record?.content?.attachments?.length){const paths=record.content.attachments.map(x=>x.path).filter(Boolean);if(paths.length){const {error}=await client.storage.from(bucket).remove(paths);if(error)throw error;}}
  const {error}=await client.from("workspace_items").delete().eq("id",id);
