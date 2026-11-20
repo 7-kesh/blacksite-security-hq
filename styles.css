@@ -36,3 +36,23 @@ footer{color:#71859b;border-top-color:#25394d}
 
 /* Hall of Fame */
 .hall-record{align-items:flex-start}.hall-record>div{min-width:0;flex:1}.hall-record p{color:var(--muted);font-size:11px;line-height:1.65;margin:9px 0 2px;white-space:pre-wrap;overflow-wrap:anywhere}.hall-category{display:inline-block;color:var(--lime);font-size:9px;letter-spacing:1.2px;text-transform:uppercase;border:1px solid #506b3a;background:#c7ff720b;border-radius:20px;padding:4px 8px;margin:0 0 9px}.hall-record b{display:block;font-size:14px}.hall-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:9px}.hall-links a,.hall-links button{color:var(--cyan);font-size:10px;font-weight:700;text-decoration:none;background:none;border:0;padding:0;cursor:pointer}.hall-links a:hover,.hall-links button:hover{text-decoration:underline}
+
+
+/* BLACKSITE operations upgrade */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:16px 0}
+.chart-wrap{height:220px;position:relative}
+.chart-grid canvas{width:100%!important;max-height:235px}
+.compact-charts{align-items:center;margin:18px 0}
+.compact-charts>div{min-width:0;height:210px;position:relative}
+.filter-row{display:flex;gap:10px;margin:12px 0}
+.filter-row input{flex:1}
+.filter-row select{max-width:190px}
+.inline-link{background:none!important;border:0!important;padding:0!important;color:var(--cyan)!important;font-size:10px!important;cursor:pointer}
+.record>div{min-width:0;flex:1;overflow-wrap:anywhere}
+.record small a{color:var(--cyan);text-decoration:none}
+#assetList,#controlList,#appTestList,#cloudAssetList,#intelList,#incidentList,#referenceList{margin-top:16px}
+#assetList .record,#controlList .record,#appTestList .record,#cloudAssetList .record,#intelList .record,#incidentList .record,#referenceList .record{align-items:flex-start}
+.sidebar nav{max-height:calc(100vh - 150px);overflow:auto;scrollbar-width:thin}
+.sidebar nav button{white-space:nowrap}
+@media(max-width:900px){.sidebar nav{max-height:none}.chart-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.chart-grid{grid-template-columns:1fr}.chart-wrap{height:190px}.compact-charts>div{height:190px}.filter-row{flex-direction:column}.filter-row select{max-width:none}}
