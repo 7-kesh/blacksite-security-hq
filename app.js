@@ -3,7 +3,7 @@
 const $ = (selector, root=document) => root.querySelector(selector);
 const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
 const cfg = window.BLACKSITE_SUPABASE || {};
-let client = null, currentUser = null, records = [], checklistRow = null, checks = {}, authMode = "signin", busy = false;
+let client = null, currentUser = null, records = [], checklistRow = null, checks = {}, authMode = "signin", busy = false, pendingImport = [];
 const bucket = "security-evidence";
 const kinds = ["project","finding","learning","checklist","intel","note","evidence","achievement","control","app_test","cloud_asset","incident","asset","reference"];
 const titles = {overview:"Security command center",projects:"Projects & Evidence",engineering:"Security Engineering",vapt:"VAPT & Risk Command Center",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Threat Intelligence",cybernews:"Cyber News Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",learning:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"};
@@ -85,6 +85,10 @@ function renderRisk(){
  const scores=open.map(scoreFinding).filter(n=>Number.isFinite(n));
  $("#riskOpen").textContent=open.length;$("#riskHigh").textContent=high.length;$("#riskOverdue").textContent=overdue.length;
  $("#riskAverage").textContent=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1):"—";
+ const matrix=Array.from({length:5},()=>Array(5).fill(0));
+ open.forEach(r=>{const l=Number(r.content?.likelihood),i=Number(r.content?.impact);if(Number.isInteger(l)&&l>=1&&l<=5&&Number.isInteger(i)&&i>=1&&i<=5)matrix[l-1][i-1]++;});
+ const heat=$("#riskHeatmap");
+ if(heat){heat.innerHTML=[4,3,2,1,0].map(row=>matrix[row].map((count,col)=>{const product=(row+1)*(col+1),band=product>=20?"critical":product>=12?"high":product>=6?"medium":"low";return '<div class="risk-cell risk-'+band+'" title="Likelihood '+(row+1)+', impact '+(col+1)+'"><b>'+count+'</b><small>'+(row+1)+' × '+(col+1)+'</small></div>';}).join("")).join("");}
 }
 function renderAll(){
  renderDashboard();renderLists();renderRisk();
@@ -162,6 +166,60 @@ async function handleAuth(event){
  }catch(error){showMessage(error.message||"Authentication failed.");}
  finally{busy=false;$("#authSubmit").disabled=false;}
 }
+
+function parseFindingCSV(source){
+ const rows=[];let row=[],field="",quoted=false;
+ for(let i=0;i<source.length;i++){
+  const c=source[i],next=source[i+1];
+  if(c==='"'&&quoted&&next==='"'){field+='"';i++;}
+  else if(c==='"')quoted=!quoted;
+  else if(c===","&&!quoted){row.push(field);field="";}
+  else if((c.charCodeAt(0)===10||c.charCodeAt(0)===13)&&!quoted){if(c.charCodeAt(0)===13&&next&&next.charCodeAt(0)===10)i++;row.push(field);if(row.some(x=>x.trim()))rows.push(row);row=[];field="";}
+  else field+=c;
+ }
+ row.push(field);if(row.some(x=>x.trim()))rows.push(row);
+ if(rows.length<2)return [];
+ const headers=rows.shift().map(x=>x.trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,""));
+ return rows.map(values=>Object.fromEntries(headers.map((key,index)=>[key,values[index]||""])));
+}
+function normalizeFindingImport(raw,domain){
+ const o={};for(const [key,value] of Object.entries(raw||{}))o[String(key).toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"")]=value;
+ const pick=(...keys)=>{for(const key of keys)if(o[key]!=null&&String(o[key]).trim())return String(o[key]).trim();return "";};
+ const title=pick("title","name","finding","vulnerability","issue","vulnerability_name");
+ const rawSeverity=(pick("severity","risk","priority")||"medium").toLowerCase();
+ const severity=({informational:"info",info:"info",critical:"critical",high:"high",medium:"medium",moderate:"medium",low:"low"})[rawSeverity]||"medium";
+ const rawStatus=(pick("status","state")||"open").toLowerCase().replace(/ /g,"_");
+ const status=({open:"open",new:"open",in_progress:"in_progress",resolved:"completed",closed:"completed",fixed:"completed",accepted:"accepted",accepted_risk:"accepted",false_positive:"false_positive"})[rawStatus]||"open";
+ const cvRaw=pick("cvss","cvss_score","cvss_v3","cvss3","score"),cv=cvRaw===""?null:Number(cvRaw);
+ const likelihood=Number(pick("likelihood","probability")),impact=Number(pick("impact","business_impact"));
+ const due=pick("due_date","remediation_due","sla_due_date");
+ const validDate=due.length===10&&due[4]==="-"&&due[7]==="-";
+ return {title,severity,status,content:{domain:pick("domain","category")||domain,asset:pick("asset","host","hostname","url","target"),cve:pick("cve","cwe","cve_cwe","id","finding_id"),cvss:cv!==null&&Number.isFinite(cv)&&cv>=0&&cv<=10?cv:null,due_date:validDate?due:"",likelihood:likelihood>=1&&likelihood<=5?likelihood:null,impact:impact>=1&&impact<=5?impact:null,notes:pick("notes","description","summary","detail"),remediation:pick("remediation","recommendation","solution","fix")}};
+}
+async function previewFindingImport(event){
+ event.preventDefault();const form=event.currentTarget,file=form.elements.file.files[0];if(!file)return;
+ messageForm(form,"Reading scan report…");pendingImport=[];
+ try{
+  if(file.size>20*1024*1024)throw new Error("Import file exceeds 20 MB.");
+  const raw=await file.text();let rows;
+  if(file.name.toLowerCase().endsWith(".json")){const parsed=JSON.parse(raw);rows=Array.isArray(parsed)?parsed:(parsed.findings||parsed.vulnerabilities||parsed.results||[]);if(!Array.isArray(rows))throw new Error("JSON must contain an array of findings.");}
+  else rows=parseFindingCSV(raw);
+  const domain=String(new FormData(form).get("domain")||"VAPT & Pentest");
+  pendingImport=rows.map(item=>normalizeFindingImport(item,domain)).filter(item=>item.title);
+  const host=$("#findingImportPreview");
+  host.innerHTML=pendingImport.length?'<p class="empty">Validated '+pendingImport.length+' finding(s). Review the sample, then confirm import.</p>'+pendingImport.slice(0,6).map(item=>'<article class="record"><div class="record-main"><div class="record-title">'+escapeHtml(item.title)+'</div><div class="record-meta">'+escapeHtml(item.severity)+' · '+escapeHtml(item.content.asset)+' · '+escapeHtml(item.content.cve)+'</div></div></article>').join("")+'<button class="button primary" id="confirmFindingImport" type="button">Import '+pendingImport.length+' findings</button>':'<p class="empty">No valid finding titles found. Check the file headers.</p>';
+  messageForm(form,pendingImport.length?"Preview ready.":"No valid findings found.");
+ }catch(error){pendingImport=[];$("#findingImportPreview").textContent="Could not parse report: "+error.message;messageForm(form,error.message);}
+}
+async function confirmFindingImport(button){
+ if(!pendingImport.length||!currentUser)return;button.disabled=true;setStatus("IMPORTING");
+ const batch=pendingImport.slice();
+ try{
+  for(const item of batch){const payload={user_id:currentUser.id,kind:"finding",title:item.title,status:item.status,severity:item.severity,content:item.content,reference_url:null,tags:[]};const {error}=await client.from("workspace_items").insert(payload);if(error)throw error;}
+  pendingImport=[];$("#findingImportPreview").innerHTML='<p class="empty">Imported '+batch.length+' findings successfully.</p>';await loadWorkspace();
+ }catch(error){button.disabled=false;setStatus("SYNC ERROR");alert("Import stopped: "+error.message+" Some rows may already be saved; review the register before retrying.");}
+}
+
 async function start(){
  if(!cfg.url||!cfg.publishableKey){authVisible(true);showMessage("Supabase configuration is missing.");setStatus("CONFIG ERROR");return;}
  if(!window.supabase?.createClient){authVisible(true);showMessage("Supabase client library did not load. Check your connection and refresh.");setStatus("LIBRARY ERROR");return;}
@@ -186,6 +244,7 @@ async function start(){
  else{authVisible(true);setStatus("SIGN IN REQUIRED");}
 }
 document.addEventListener("click",async event=>{
+ const confirmImport=event.target.closest("#confirmFindingImport");if(confirmImport){await confirmFindingImport(confirmImport);return;}
  const nav=event.target.closest("[data-view]");if(nav){event.preventDefault();navigate(nav.dataset.view);return;}
  const jump=event.target.closest("[data-jump]");if(jump){navigate(jump.dataset.jump);return;}
  const del=event.target.closest("[data-delete]");if(del&&currentUser){if(!confirm("Delete this record and its attached evidence?"))return;del.disabled=true;try{setStatus("SAVING");await removeRecord(del.dataset.delete);await loadWorkspace();}catch(error){alert("Delete failed: "+error.message);del.disabled=false;setStatus("SYNC ERROR");}return;}
@@ -206,6 +265,7 @@ document.addEventListener("change",async event=>{
  catch(error){setStatus("SYNC ERROR");alert("Checklist save failed: "+error.message);}
 });
 $("#exportData").addEventListener("click",exportBackup);
+$("#findingImportForm").addEventListener("submit",previewFindingImport);
 $("#findingSearch").addEventListener("input",renderLists);
 $("#todayLabel").textContent=new Date().toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
 start().catch(error=>{console.error(error);authVisible(true);showMessage(error.message||"Could not start BLACKSITE.");setStatus("STARTUP ERROR");});
