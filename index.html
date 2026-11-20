@@ -131,6 +131,12 @@
         <label class="span-2">Remediation / notes<textarea name="notes" rows="3" placeholder="Impact, reproduction context and recommended fix. Do not store secrets."></textarea></label>
         <div class="form-actions"><button class="button primary" type="submit">Add finding</button><span class="form-status" aria-live="polite"></span></div>
       </form></div>
+      <div class="panel"><h3>Import scanner findings</h3><form id="findingImportForm" class="data-form">
+        <label>CSV / JSON report<input name="file" type="file" accept=".csv,.json,text/csv,application/json" required></label>
+        <label>Default domain<select name="domain"><option>VAPT & Pentest</option><option>Web App Security</option><option>Cloud Security</option><option>Security Engineering</option></select></label>
+        <div class="form-actions"><button class="button secondary" type="submit">Preview import</button><span class="form-status" aria-live="polite"></span></div>
+      </form><div id="findingImportPreview" class="record-list"></div></div>
+      <div class="panel"><div class="panel-head"><h3>5 × 5 likelihood / impact matrix</h3><span class="subtle">Explicit ratings only</span></div><div id="riskHeatmap" class="risk-heatmap"></div><p class="muted tiny">Likelihood increases upward; impact increases to the right. Unrated findings are excluded from this matrix.</p></div>
       <div class="panel"><div class="panel-head"><h3>Vulnerability register</h3><input class="search-input" id="findingSearch" type="search" placeholder="Filter findings…"></div><div class="record-list" data-list="finding"></div></div>
     </section>
 
