@@ -56,3 +56,33 @@ footer{color:#71859b;border-top-color:#25394d}
 .sidebar nav button{white-space:nowrap}
 @media(max-width:900px){.sidebar nav{max-height:none}.chart-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:600px){.chart-grid{grid-template-columns:1fr}.chart-wrap{height:190px}.compact-charts>div{height:190px}.filter-row{flex-direction:column}.filter-row select{max-width:none}}
+
+
+/* Vulnerability risk command center */
+.risk-command{margin:18px 0}
+.risk-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.risk-kpis>div{background:rgba(255,255,255,.035);border:1px solid var(--line,#26384b);border-radius:12px;padding:13px;display:grid;gap:6px}
+.risk-kpis small{font-size:9px;letter-spacing:.1em;color:var(--muted,#8fa3b8)}
+.risk-kpis b{font-size:25px;font-weight:700;color:var(--text,#e8f0f8)}
+.risk-kpis>div:nth-child(2) b{color:#ff8c78}
+.risk-kpis>div:nth-child(3) b{color:#ffb36b}
+.risk-layout{display:grid;grid-template-columns:minmax(260px,1fr) minmax(280px,1fr);gap:24px;align-items:center;margin-top:18px}
+.risk-charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.risk-charts>div{height:205px;min-width:0;position:relative}
+.risk-heatmap{display:grid;grid-template-columns:20px repeat(5,minmax(30px,1fr));grid-template-rows:18px repeat(5,45px) 20px;gap:5px;margin:12px 0;max-width:430px}
+.heat-axis{grid-column:1;grid-row:1;text-align:center;color:var(--muted,#8fa3b8);font-size:10px}
+.heat-row{display:contents}
+.heat-y{display:flex;align-items:center;justify-content:center;color:var(--muted,#8fa3b8);font-size:10px}
+.heat-cell{border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,.08)}
+.heat-low{background:rgba(83,177,139,.2);color:#9de1bf}
+.heat-medium{background:rgba(224,193,87,.22);color:#f2d47a}
+.heat-high{background:rgba(239,146,71,.25);color:#ffc184}
+.heat-critical{background:rgba(242,91,102,.28);color:#ff9ca6}
+.heat-x{grid-column:2/7;grid-row:7}
+.heat-x-label{grid-row:7;text-align:center;color:var(--muted,#8fa3b8);font-size:10px}
+.risk-lists{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.risk-lists h4{font-size:12px;margin:0 0 8px;color:var(--text,#e8f0f8)}
+#findingImportPreview{margin-top:12px}
+#findingImportPreview .primary{margin-top:10px}
+@media(max-width:800px){.risk-layout{grid-template-columns:1fr}.risk-charts{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.risk-kpis{grid-template-columns:1fr 1fr}.risk-lists{grid-template-columns:1fr}.risk-charts{grid-template-columns:1fr}.risk-charts>div{height:180px}.risk-heatmap{grid-template-rows:18px repeat(5,38px) 20px}}
