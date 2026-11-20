@@ -86,3 +86,32 @@ footer{color:#71859b;border-top-color:#25394d}
 #findingImportPreview .primary{margin-top:10px}
 @media(max-width:800px){.risk-layout{grid-template-columns:1fr}.risk-charts{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.risk-kpis{grid-template-columns:1fr 1fr}.risk-lists{grid-template-columns:1fr}.risk-charts{grid-template-columns:1fr}.risk-charts>div{height:180px}.risk-heatmap{grid-template-rows:18px repeat(5,38px) 20px}}
+
+/* Cyber News Intelligence */
+.news-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:12px 0}
+.news-toolbar h3{margin:6px 0}.news-toolbar p{margin:5px 0 0;font-size:11px}
+.news-controls{display:grid;grid-template-columns:minmax(210px,280px) 1fr;gap:12px;margin:14px 0}
+.news-status{font-size:11px;color:var(--muted);padding:8px 2px;min-height:30px}
+.news-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.news-card{min-width:0;display:flex;flex-direction:column;gap:10px}
+.news-card-top,.news-card-foot{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.news-card-top small,.news-card-foot time{font-size:10px;color:var(--muted)}
+.news-category{display:inline-flex;padding:5px 8px;border:1px solid var(--line);border-radius:30px;font-size:9px;color:var(--cyan);background:#70e9df0b}
+.news-exploits{color:#ff9da7;border-color:#8d4652;background:#ff647c12}
+.news-breaches{color:#ffbd86;border-color:#8b5d3b;background:#ffad6612}
+.news-threats{color:#c1aaff;border-color:#64558e;background:#a99bff12}
+.news-cloud{color:#86d7ff;border-color:#3c6d87;background:#70cfff12}
+.news-ai{color:#d1c1ff;border-color:#66588d;background:#a99bff12}
+.news-research{color:var(--lime);border-color:#506b3a;background:#c7ff720b}
+.news-card h3{font-size:15px;line-height:1.45;margin:0}
+.news-card h3 a,.news-card-foot a{color:var(--text);text-decoration:none}
+.news-card h3 a:hover,.news-card-foot a:hover{color:var(--cyan)}
+.news-card p{font-size:11px;line-height:1.65;color:var(--muted);margin:0;flex:1}
+.news-card-foot{border-top:1px solid var(--line);padding-top:10px;margin-top:3px}
+.news-card-foot a{font-size:10px;color:var(--cyan);font-weight:700}
+.news-empty{grid-column:1/-1}
+.news-sources{margin-top:18px}
+.news-source-list{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}
+.news-source-list a{font-size:11px;color:var(--cyan);text-decoration:none;font-weight:700}
+.news-sources>p{font-size:10px;line-height:1.6}
+@media(max-width:700px){.news-grid{grid-template-columns:1fr}.news-controls{grid-template-columns:1fr}.news-toolbar{align-items:flex-start;flex-direction:column}}
