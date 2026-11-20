@@ -1,4 +1,6 @@
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s),$=s=>[...document.querySelectorAll(s)];
+window.addEventListener("error",e=>{const el=document.querySelector("#authMessage");if(el)el.textContent="Application error: "+(e.message||"Unknown error")+". Refresh the page; if it continues, share this message."});
+window.addEventListener("unhandledrejection",e=>{const el=document.querySelector("#authMessage");if(el)el.textContent="Application error: "+(e.reason?.message||String(e.reason)||"Background operation failed")+". Refresh the page; if it continues, share this message."});
 const tracks={
  engineering:["Define system context, assets and trust boundaries","Write a threat model with abuse cases and mitigations","Harden identity, endpoint, network and platform baselines","Add secrets scanning, SAST, SCA and IaC checks to CI/CD","Validate logging, alerting, backup and recovery controls","Document control owner, evidence and exception expiry"],
  vapt:["Obtain written authorization, scope, ROE and test window","Confirm assets, exclusions, rate limits and emergency contacts","Perform discovery and map attack surface within scope","Validate vulnerabilities safely and preserve redacted evidence","Rate business impact and write actionable remediation","Retest fixes and record residual risk and closure"],
@@ -163,7 +165,7 @@ async function authenticate(){
  }catch(e){message(e.message)}finally{busy=false;$("#authSubmit").disabled=false}
 }
 async function start(){
- if(!client){showAuth();message("Supabase configuration is missing. Check supabase-config.js.");return}
+ if(!client){showAuth();message(cfg?.url?"Could not load the Supabase client library. Check your connection, refresh the page, and try again.":"Supabase configuration is missing. Check supabase-config.js.");return}
  $("#authForm").addEventListener("submit",e=>{e.preventDefault();authenticate()});
  $("#authMode").addEventListener("click",()=>{authMode=authMode==="signin"?"signup":"signin";$("#authTitle").textContent=authMode==="signin"?"Sign in to BLACKSITE":"Create your BLACKSITE account";$("#authSubmit").textContent=authMode==="signin"?"Sign in":"Create account";$("#authMode").textContent=authMode==="signin"?"Create your account":"Back to sign in";$("#authForm").elements.password.autocomplete=authMode==="signin"?"current-password":"new-password";message("")});
  $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();state=freshState();showAuth();setStatus("SIGNED OUT")});
@@ -175,7 +177,7 @@ async function start(){
  if(session?.user){user=session.user;showWorkspace();try{await loadWorkspace()}catch(e){setStatus("SYNC ERROR");message(e.message)}}
  else showAuth();
 }
-$("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-view]");if(b)view(b.dataset.view)});
+document.addEventListener("click",e=>{const b=e.target.closest("#nav button[data-view]");if(!b)return;e.preventDefault();const target=b.dataset.view;if(document.getElementById(target))view(target)},true);
 $("#refreshCyberNews").addEventListener("click",loadCyberNews);
 $("#newsCategory").addEventListener("change",renderCyberNews);
 $("#newsSearch").addEventListener("input",renderCyberNews);
