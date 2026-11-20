@@ -87,3 +87,10 @@ The VAPT workspace now includes a risk dashboard with:
 - CSV and JSON scan-report import with a preview and duplicate filtering against existing records and within the selected file.
 
 CSV import expects a header row with fields such as `title,severity,cvss,asset,cve,status,due_date,likelihood,impact,notes,remediation`. JSON accepts an array or an object containing a `findings`, `vulnerabilities`, or `results` array. Imported records are saved to the existing per-user RLS-protected workspace table. Importing does not run a scan or automatically validate the scanner's findings; review the preview and confirm only reports from authorized assessments.
+
+
+### Cyber News Intelligence
+
+The dedicated Cyber News Intelligence page reads public RSS feeds from The Hacker News, BleepingComputer and SecurityWeek through the rss2json feed-conversion service. It deduplicates stories, sorts by publication date, and heuristically categorizes headlines into zero-days/exploitation, breaches/ransomware, threat intelligence/malware, cloud/network/application security, AI security, and tools/research/industry. Users can refresh, filter and search stories, then open the original publisher's article.
+
+Feed availability and categorization are best-effort; verify urgent claims against original reporting and official advisories such as the CISA Known Exploited Vulnerabilities catalog. The browser news reader is not a scanner or a verified threat-intelligence feed. A separate weekly ChatGPT automation produces a seven-day categorized briefing; that scheduled briefing is delivered in ChatGPT and is not automatically written into the BLACKSITE website.
