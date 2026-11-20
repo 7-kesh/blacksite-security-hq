@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s),$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 window.addEventListener("error",e=>{const el=document.querySelector("#authMessage");if(el)el.textContent="Application error: "+(e.message||"Unknown error")+". Refresh the page; if it continues, share this message."});
 window.addEventListener("unhandledrejection",e=>{const el=document.querySelector("#authMessage");if(el)el.textContent="Application error: "+(e.reason?.message||String(e.reason)||"Background operation failed")+". Refresh the page; if it continues, share this message."});
 const tracks={
