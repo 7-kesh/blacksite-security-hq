@@ -4,6 +4,7 @@ const $ = (selector, root=document) => root.querySelector(selector);
 const $$ = (selector, root=document) => Array.from(root.querySelectorAll(selector));
 const cfg = window.BLACKSITE_SUPABASE || {};
 let client = null, currentUser = null, records = [], checklistRow = null, checks = {}, authMode = "signin", busy = false, pendingImport = [];
+let newsPeriod = "daily", newsCache = { daily: null, weekly: null };
 const bucket = "security-evidence";
 const kinds = ["project","finding","learning","checklist","intel","note","evidence","achievement","control","app_test","cloud_asset","incident","asset","reference"];
 const titles = {overview:"Security command center",projects:"Projects & Evidence",engineering:"Security Engineering",vapt:"VAPT & Risk Command Center",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Threat Intelligence",cybernews:"Cyber News Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",learning:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"};
@@ -220,6 +221,33 @@ async function confirmFindingImport(button){
  }catch(error){button.disabled=false;setStatus("SYNC ERROR");alert("Import stopped: "+error.message+" Some rows may already be saved; review the register before retrying.");}
 }
 
+
+function renderNews(){
+ const payload=newsCache[newsPeriod],host=$("#newsFeed");if(!host)return;
+ if(!payload){host.innerHTML='<p class="empty">No '+newsPeriod+' briefing has been generated yet. Use Refresh or wait for the next scheduled update.</p>';return;}
+ const category=$("#newsCategory")?.value||"all",query=($("#newsSearch")?.value||"").trim().toLowerCase();
+ const stories=(payload.stories||[]).filter(story=>(category==="all"||story.category===category)&&(!query||(story.title+" "+story.summary+" "+story.source+" "+story.category).toLowerCase().includes(query)));
+ $("#newsGenerated").textContent=(newsPeriod==="daily"?"Daily briefing":"Weekly roundup")+" · Generated "+new Date(payload.generatedAt).toLocaleString();
+ const sources=payload.sources||[],available=sources.filter(source=>source.available).length;
+ $("#newsSourceStatus").textContent=available+"/"+sources.length+" feeds online · "+(payload.storyCount||0)+" stories collected";
+ if(!stories.length){host.innerHTML='<p class="empty">No stories match this filter in the selected briefing.</p>';return;}
+ host.innerHTML=stories.map(story=>{
+  const date=story.publishedAt?new Date(story.publishedAt).toLocaleString():"Date unavailable";
+  const safeUrl=/^https?:\/\//i.test(story.url||"")?escapeHtml(story.url):"#";
+  return '<article class="news-card"><div class="news-card-top"><span class="news-category">'+escapeHtml(story.category||"Security Industry")+'</span><span class="news-urgency '+(story.urgency==="High attention"?"attention":"")+'">'+escapeHtml(story.urgency||"Monitor")+'</span></div><h3><a href="'+safeUrl+'" target="_blank" rel="noopener">'+escapeHtml(story.title)+'</a></h3><div class="news-byline">'+escapeHtml(story.source||"Security feed")+' · '+escapeHtml(date)+'</div>'+(story.summary?'<p>'+escapeHtml(story.summary)+'</p>':"")+'<div class="news-action"><b>Defender action</b><span>'+escapeHtml(story.defensiveAction||"Review the source and assess relevance to your environment.")+'</span></div><a class="news-read" href="'+safeUrl+'" target="_blank" rel="noopener">Read original report ↗</a></article>';
+ }).join("");
+}
+async function loadNews(period=newsPeriod,force=false){
+ newsPeriod=period;
+ $("[data-news-period]").forEach(button=>{const active=button.dataset.newsPeriod===period;button.classList.toggle("primary",active);button.classList.toggle("secondary",!active);});
+ const host=$("#newsFeed");if(host&&!newsCache[period])host.innerHTML='<p class="empty">Fetching '+period+' briefing…</p>';
+ if(force||!newsCache[period]){
+  try{const response=await fetch("data/"+period+".json?cache="+Date.now(),{cache:"no-store"});if(!response.ok)throw new Error("Briefing not published yet (HTTP "+response.status+").");newsCache[period]=await response.json();}
+  catch(error){if(host)host.innerHTML='<p class="empty">'+escapeHtml(error.message)+' GitHub Actions will publish the next automated update.</p>';$("#newsGenerated").textContent="Briefing unavailable";$("#newsSourceStatus").textContent="";return;}
+ }
+ renderNews();
+}
+
 async function start(){
  if(!cfg.url||!cfg.publishableKey){authVisible(true);showMessage("Supabase configuration is missing.");setStatus("CONFIG ERROR");return;}
  if(!window.supabase?.createClient){authVisible(true);showMessage("Supabase client library did not load. Check your connection and refresh.");setStatus("LIBRARY ERROR");return;}
@@ -245,7 +273,7 @@ async function start(){
 }
 document.addEventListener("click",async event=>{
  const confirmImport=event.target.closest("#confirmFindingImport");if(confirmImport){await confirmFindingImport(confirmImport);return;}
- const nav=event.target.closest("[data-view]");if(nav){event.preventDefault();navigate(nav.dataset.view);return;}
+ const nav=event.target.closest("[data-view]");if(nav){event.preventDefault();navigate(nav.dataset.view);if(nav.dataset.view==="cybernews")loadNews("daily");return;}
  const jump=event.target.closest("[data-jump]");if(jump){navigate(jump.dataset.jump);return;}
  const del=event.target.closest("[data-delete]");if(del&&currentUser){if(!confirm("Delete this record and its attached evidence?"))return;del.disabled=true;try{setStatus("SAVING");await removeRecord(del.dataset.delete);await loadWorkspace();}catch(error){alert("Delete failed: "+error.message);del.disabled=false;setStatus("SYNC ERROR");}return;}
  const file=event.target.closest("[data-open-file]");if(file&&currentUser){try{await openEvidence(file.dataset.openFile);}catch(error){alert("Could not open evidence: "+error.message);}}
@@ -267,6 +295,10 @@ document.addEventListener("change",async event=>{
 $("#exportData").addEventListener("click",exportBackup);
 $("#findingImportForm").addEventListener("submit",previewFindingImport);
 $("#findingSearch").addEventListener("input",renderLists);
+$("#newsCategory").addEventListener("change",renderNews);
+$("#newsSearch").addEventListener("input",renderNews);
+$("#refreshNews").addEventListener("click",()=>loadNews(newsPeriod,true));
 $("#todayLabel").textContent=new Date().toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+loadNews("daily");
 start().catch(error=>{console.error(error);authVisible(true);showMessage(error.message||"Could not start BLACKSITE.");setStatus("STARTUP ERROR");});
 })();
