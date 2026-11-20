@@ -119,7 +119,37 @@ function render(){
  renderCharts();
  renderRiskDashboard();
 }
-function view(id){$$(".view").forEach(x=>x.classList.toggle("active",x.id===id));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));$("#crumb").textContent=id.toUpperCase();$("#heading").textContent=({overview:"Security command center",engineering:"Security Engineering",vapt:"VAPT & Penetration Testing",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Security Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",projects:"Projects & Evidence",tracker:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"})[id];if(id==="vapt")renderRiskDashboard();window.scrollTo({top:0,behavior:"smooth"})}
+const cyberNewsFeeds=[{name:"The Hacker News",url:"https://feeds.feedburner.com/TheHackersNews"},{name:"BleepingComputer",url:"https://www.bleepingcomputer.com/feed/"},{name:"SecurityWeek",url:"https://www.securityweek.com/feed/"}];
+let cyberNewsItems=[],cyberNewsBusy=false;
+function classifyCyberNews(item){
+ const t=(item.title+" "+(item.description||"")+" "+(item.content||"")).toLowerCase();
+ if(/zero.?day|actively exploit|exploited in the wild|kev catalog|cve-20\d\d|critical vulnerability|remote code execution|rce\b/.test(t))return "exploits";
+ if(/ransomware|data breach|breach|stolen data|leak(ed)?|extortion|victim data/.test(t))return "breaches";
+ if(/apt\d*|threat actor|campaign|botnet|malware|infostealer|backdoor|spyware|phishing|nation.?state|cyber.?espionage/.test(t))return "threats";
+ if(/artificial intelligence|\bai\b|large language model|llm|prompt injection|model security|machine learning/.test(t))return "ai";
+ if(/cloud|kubernetes|container|aws|azure|google cloud|api security|web application|network security|firewall|identity/.test(t))return "cloud";
+ return "research";
+}
+function newsCategoryLabel(c){return ({exploits:"Zero-days & exploitation",breaches:"Breaches & ransomware",threats:"Threat intelligence & malware",cloud:"Cloud, network & application",ai:"AI security",research:"Tools, research & industry"})[c]||"Security research"}
+function renderCyberNews(){
+ const cat=$("#newsCategory")?.value||"all",q=($("#newsSearch")?.value||"").trim().toLowerCase();
+ const items=cyberNewsItems.filter(x=>(cat==="all"||x.category===cat)&&(!q||(x.title+" "+x.source+" "+x.summary).toLowerCase().includes(q)));
+ $("#newsFeed").innerHTML=items.length?items.map(x=>'<article class="panel news-card"><div class="news-card-top"><span class="news-category news-'+x.category+'">'+safe(newsCategoryLabel(x.category))+'</span><small>'+safe(x.source)+'</small></div><h3><a href="'+safe(x.link)+'" target="_blank" rel="noopener noreferrer">'+safe(x.title)+'</a></h3><p>'+safe(x.summary)+'</p><div class="news-card-foot"><time>'+safe(x.date?new Date(x.date).toLocaleString():"Date unavailable")+'</time><a href="'+safe(x.link)+'" target="_blank" rel="noopener noreferrer">Read original ↗</a></div></article>').join(""):'<div class="panel news-empty"><h3>No matching stories</h3><p class="muted">'+(cyberNewsItems.length?"Try another category or search term.":"Refresh the feeds to load current stories.")+'</p></div>';
+}
+function newsSummary(html){const d=document.createElement("div");d.innerHTML=html||"";return (d.textContent||"").replace(/\s+/g," ").trim().slice(0,260)}
+async function loadCyberNews(){
+ if(cyberNewsBusy)return;cyberNewsBusy=true;const btn=$("#refreshCyberNews");if(btn){btn.disabled=true;btn.textContent="Refreshing…"}$("#newsStatus").textContent="Fetching public security feeds…";
+ try{
+  const results=await Promise.allSettled(cyberNewsFeeds.map(async feed=>{const endpoint="https://api.rss2json.com/v1/api.json?rss_url="+encodeURIComponent(feed.url);const response=await fetch(endpoint,{cache:"no-store"});if(!response.ok)throw new Error(feed.name+" returned HTTP "+response.status);const data=await response.json();if(data.status!=="ok")throw new Error(data.message||feed.name+" feed unavailable");return (data.items||[]).map(item=>({title:item.title||"Untitled story",link:item.link||"",date:item.pubDate||"",source:feed.name,summary:newsSummary(item.description||item.content),category:classifyCyberNews(item)})).filter(x=>x.title&&/^https?:\/\//i.test(x.link))}));
+  const good=results.filter(x=>x.status==="fulfilled").flatMap(x=>x.value),failed=results.filter(x=>x.status==="rejected");
+  const seen=new Set();cyberNewsItems=good.filter(x=>{const k=x.link||x.title;if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+  $("#newsUpdated").textContent="Last refreshed "+new Date().toLocaleString();
+  $("#newsStatus").textContent=cyberNewsItems.length+" stories loaded from "+(results.length-failed.length)+" of "+results.length+" feeds"+(failed.length?" · "+failed.length+" feed(s) unavailable":"")+".";
+  renderCyberNews();
+ }catch(err){$("#newsStatus").textContent="Could not load news feeds: "+err.message}
+ finally{cyberNewsBusy=false;if(btn){btn.disabled=false;btn.textContent="↻ Refresh feeds"}}
+}
+function view(id){$(".view").forEach(x=>x.classList.toggle("active",x.id===id));$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));$("#crumb").textContent=id.toUpperCase();$("#heading").textContent=({overview:"Security command center",engineering:"Security Engineering",vapt:"VAPT & Penetration Testing",appsec:"Web Application Security",cloud:"Cloud Security",intel:"Security Intelligence",cybernews:"Cyber News Intelligence",incidents:"Incident Desk",assets:"Asset Inventory",projects:"Projects & Evidence",tracker:"Learning Tracker",references:"Reference Library",hall:"Hall of Fame"})[id];if(id==="vapt")renderRiskDashboard();if(id==="cybernews"&&!cyberNewsItems.length)loadCyberNews();window.scrollTo({top:0,behavior:"smooth"})}
 function showWorkspace(){ $("#authGate").classList.add("hidden");$("#signOut").style.display="inline-block" }
 function showAuth(){ $("#authGate").classList.remove("hidden");$("#signOut").style.display="none" }
 async function authenticate(){
@@ -146,6 +176,10 @@ async function start(){
  else showAuth();
 }
 $("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-view]");if(b)view(b.dataset.view)});
+$("#refreshCyberNews").addEventListener("click",loadCyberNews);
+$("#newsCategory").addEventListener("change",renderCyberNews);
+$("#newsSearch").addEventListener("input",renderCyberNews);
+$("#newsFeed").addEventListener("click",e=>{if(e.target.closest("[data-news-refresh]"))loadCyberNews()});
 document.addEventListener("click",async e=>{
  const ev=e.target.closest("[data-evidence]");if(ev&&user){try{const {data,error}=await client.storage.from("security-evidence").createSignedUrl(ev.dataset.path,60);if(error)throw error;window.open(data.signedUrl,"_blank","noopener")}catch(err){alert("Could not open evidence: "+err.message)}}
  const hallEv=e.target.closest("[data-hall-evidence]");if(hallEv&&user){const record=state.achievements.find(x=>x.id===hallEv.dataset.hallEvidence);if(record?.content?.path){try{const {data,error}=await client.storage.from("security-evidence").createSignedUrl(record.content.path,60);if(error)throw error;window.open(data.signedUrl,"_blank","noopener")}catch(err){alert("Could not open attachment: "+err.message)}}}
