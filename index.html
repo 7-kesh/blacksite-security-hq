@@ -6,10 +6,10 @@
 <meta name="theme-color" content="#080d16">
 <meta name="description" content="BLACKSITE — private security engineering and vulnerability management workspace.">
 <title>BLACKSITE // Security HQ</title>
-<link rel="stylesheet" href="styles.css?v=20261120-rebuild3">
+<link rel="stylesheet" href="styles.css?v=cybernews-auto-1">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script defer src="supabase-config.js?v=20261120-rebuild"></script>
-<script defer src="app.js?v=20261120-rebuild3"></script>
+<script defer src="app.js?v=cybernews-auto-1"></script>
 </head>
 <body>
 <div id="authGate" class="auth-gate">
@@ -190,17 +190,19 @@
     </section>
 
     <section class="view" id="cybernews" data-panel="cybernews">
-      <div class="section-intro"><p class="eyebrow">DEFENDER BRIEFING</p><h2>Cyber News Intelligence</h2><p class="muted">Primary-source desks for exploited vulnerabilities, advisories, incidents and security research.</p></div>
-      <div class="source-grid">
-        <a class="source-card" href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener"><b>CISA KEV</b><small>Known exploited vulnerabilities</small></a>
-        <a class="source-card" href="https://nvd.nist.gov/" target="_blank" rel="noopener"><b>NIST NVD</b><small>CVE records and enrichment</small></a>
-        <a class="source-card" href="https://www.cisa.gov/news-events/cybersecurity-advisories" target="_blank" rel="noopener"><b>CISA Advisories</b><small>Defensive alerts and guidance</small></a>
-        <a class="source-card" href="https://attack.mitre.org/" target="_blank" rel="noopener"><b>MITRE ATT&CK</b><small>Adversary tactics and techniques</small></a>
-        <a class="source-card" href="https://www.bleepingcomputer.com/" target="_blank" rel="noopener"><b>BleepingComputer</b><small>Security news and incident reporting</small></a>
-        <a class="source-card" href="https://www.securityweek.com/" target="_blank" rel="noopener"><b>SecurityWeek</b><small>Enterprise security coverage</small></a>
-      </div>
-      <div class="panel"><h3>Defender review checklist</h3><ol class="defender-list"><li>Confirm affected products, versions and exposure.</li><li>Check CISA KEV and vendor advisories for exploitation status.</li><li>Prioritize internet-facing and business-critical assets.</li><li>Apply mitigations, patches or compensating controls.</li><li>Record evidence, owners, deadlines and residual risk.</li></ol></div>
-    </section>
+<div class="section-intro"><p class="eyebrow">AUTOMATED DEFENDER BRIEFING</p><h2>Cyber News Intelligence</h2><p class="muted">Daily security headlines and a weekly threat roundup, refreshed automatically from trusted security feeds.</p></div>
+<div class="news-toolbar"><div class="news-tabs" role="group" aria-label="Briefing period"><button class="button primary" type="button" data-news-period="daily">Daily briefing</button><button class="button secondary" type="button" data-news-period="weekly">Weekly roundup</button></div>
+<div class="news-controls"><select id="newsCategory" aria-label="Filter by category"><option value="all">All categories</option><option>Vulnerabilities & Zero-Days</option><option>Breaches & Ransomware</option><option>Threat Intelligence</option><option>Cloud & Identity</option><option>AI Security</option><option>Tools & Research</option><option>Security Industry</option></select><input id="newsSearch" type="search" placeholder="Search headlines…" aria-label="Search headlines"><button class="button secondary" id="refreshNews" type="button">Refresh</button></div></div>
+<div class="news-meta"><span id="newsGenerated">Loading latest briefings…</span><span id="newsSourceStatus"></span></div><div id="newsFeed" class="news-feed"><p class="empty">Loading automated cyber news…</p></div>
+<div class="panel"><h3>Primary-source desks</h3><div class="source-grid">
+<a class="source-card" href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener"><b>CISA KEV</b><small>Known exploited vulnerabilities</small></a>
+<a class="source-card" href="https://nvd.nist.gov/" target="_blank" rel="noopener"><b>NIST NVD</b><small>CVE records and enrichment</small></a>
+<a class="source-card" href="https://www.cisa.gov/news-events/cybersecurity-advisories" target="_blank" rel="noopener"><b>CISA Advisories</b><small>Defensive alerts and guidance</small></a>
+<a class="source-card" href="https://attack.mitre.org/" target="_blank" rel="noopener"><b>MITRE ATT&CK</b><small>Adversary tactics and techniques</small></a>
+<a class="source-card" href="https://www.bleepingcomputer.com/" target="_blank" rel="noopener"><b>BleepingComputer</b><small>Security news and incident reporting</small></a>
+<a class="source-card" href="https://www.securityweek.com/" target="_blank" rel="noopener"><b>SecurityWeek</b><small>Enterprise security coverage</small></a>
+</div></div>
+<div class="panel"><h3>Defender review checklist</h3><ol class="defender-list"><li>Confirm affected products, versions and exposure.</li><li>Check CISA KEV and vendor advisories for exploitation status.</li><li>Prioritize internet-facing and business-critical assets.</li><li>Apply mitigations, patches or compensating controls.</li><li>Record evidence, owners, deadlines and residual risk.</li></ol></div></section>
 
     <section class="view" id="incidents" data-panel="incidents">
       <div class="section-intro"><p class="eyebrow">DETECT / CONTAIN / RECOVER</p><h2>Incident Desk</h2><p class="muted">Document incidents, tabletop exercises and lessons learned.</p></div>
