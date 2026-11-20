@@ -7,7 +7,7 @@ const tracks={
 };
 const cfg=window.BLACKSITE_SUPABASE;
 const client=window.supabase?.createClient(cfg?.url,cfg?.publishableKey);
-const starter={projects:[],labs:[],findings:[],evidence:[],achievements:[],controls:[],appTests:[],cloudAssets:[],intel:[],incidents:[],assets:[],references:[],checks:{},activity:[]};
+const freshState=()=>({projects:[],labs:[],findings:[],evidence:[],achievements:[],controls:[],appTests:[],cloudAssets:[],intel:[],incidents:[],assets:[],references:[],checks:{},activity:[]});
 const charts={};
 const severityValue=v=>({informational:"info"}[String(v||"").toLowerCase()]||String(v||"").toLowerCase());
 function recordCard(r,meta,kind){return '<div class="record"><div><b>'+safe(r.title)+'</b><small>'+safe(meta||"")+'</small>'+(r.content?.notes?'<small>'+safe(r.content.notes)+'</small>':"")+(r.reference_url&&/^https?:\/\//i.test(r.reference_url)?'<small><a href="'+safe(r.reference_url)+'" target="_blank" rel="noopener noreferrer">Open source ↗</a></small>':"")+(r.content?.path?'<small><button type="button" class="inline-link" data-evidence="'+safe(r.id)+'" data-path="'+safe(r.content.path)+'">Open attachment ↗</button></small>':"")+'</div><button data-remove="'+kind+'" data-id="'+safe(r.id)+'">Remove</button></div>'}
@@ -20,7 +20,7 @@ function drawChart(id,type,labels,values,label){
 }
 function renderCharts(){const keys=["critical","high","medium","low","info"],counts=keys.map(k=>state.findings.filter(x=>severityValue(x.severity)===k).length);drawChart("severityChart","doughnut",["Critical","High","Medium","Low","Info"],counts,"Findings");drawChart("vaptChart","doughnut",["Critical","High","Medium","Low","Info"],counts,"Findings");const now=new Date(),months=[];for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({label:d.toLocaleString(undefined,{month:"short"}),year:d.getFullYear(),month:d.getMonth()})}drawChart("trendChart","line",months.map(x=>x.label),months.map(m=>state.findings.filter(x=>{const d=new Date(x.created_at||x.updated_at||0);return d.getFullYear()===m.year&&d.getMonth()===m.month}).length),"Created");drawChart("findingStatusChart","doughnut",["Open","In progress","Resolved"],[state.findings.filter(x=>!["completed","resolved","closed"].includes(x.status)).length,state.findings.filter(x=>x.status==="in_progress").length,state.findings.filter(x=>["completed","resolved","closed"].includes(x.status)).length],"Status");drawChart("cloudExposureChart","doughnut",["Public","Private","Internal","Unknown"],["Public","Private","Internal","Unknown"].map(k=>state.cloudAssets.filter(x=>x.content?.exposure===k).length),"Exposure");drawChart("cloudPostureChart","doughnut",["Healthy","Needs review","Misconfigured","Exception"],["Healthy","Needs review","Misconfigured","Exception accepted"].map(k=>state.cloudAssets.filter(x=>x.content?.posture===k).length),"Posture")}
 async function attachEvidence(file){if(!file)return null;if(file.size>20*1024*1024)throw new Error(file.name+" exceeds 20 MB");const ext=(file.name.split(".").pop()||"").toLowerCase(),allowed=["pdf","png","jpg","jpeg","txt","csv","json","zip"];if(!allowed.includes(ext))throw new Error("Unsupported file type: "+file.name);const path=user.id+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const types={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",txt:"text/plain",csv:"text/csv",json:"application/json",zip:"application/zip"};const up=await client.storage.from("security-evidence").upload(path,file,{contentType:file.type||types[ext],upsert:false});if(up.error)throw up.error;return {filename:file.name,path,size:file.size,mime:file.type||types[ext]}}
-let state={...starter},user=null,checklistId=null,authMode="signin",busy=false;
+let state=freshState(),user=null,checklistId=null,authMode="signin",busy=false;
 function safe(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setStatus(t){const el=$("#syncStatus");if(el)el.textContent=t}
 function message(t){$("#authMessage").textContent=t}
@@ -33,7 +33,7 @@ async function loadWorkspace(){
  setStatus("SYNCING");
  const {data,error}=await client.from("workspace_items").select("*").order("updated_at",{ascending:false});
  if(error)throw error;
- state={...starter};checklistId=null;
+ state=freshState();checklistId=null;
  for(const r of data||[]){
   if(r.kind==="project")state.projects.push(fromRow(r));
   if(r.kind==="finding")state.findings.push(fromRow(r));
@@ -108,7 +108,7 @@ async function start(){
  if(!client){showAuth();message("Supabase configuration is missing. Check supabase-config.js.");return}
  $("#authForm").addEventListener("submit",e=>{e.preventDefault();authenticate()});
  $("#authMode").addEventListener("click",()=>{authMode=authMode==="signin"?"signup":"signin";$("#authTitle").textContent=authMode==="signin"?"Sign in to BLACKSITE":"Create your BLACKSITE account";$("#authSubmit").textContent=authMode==="signin"?"Sign in":"Create account";$("#authMode").textContent=authMode==="signin"?"Create your account":"Back to sign in";$("#authForm").elements.password.autocomplete=authMode==="signin"?"current-password":"new-password";message("")});
- $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();state={...starter};showAuth();setStatus("SIGNED OUT")});
+ $("#signOut").addEventListener("click",async()=>{await client.auth.signOut();state=freshState();showAuth();setStatus("SIGNED OUT")});
  client.auth.onAuthStateChange(async(_event,session)=>{
   if(session?.user){user=session.user;showWorkspace();$("#authMessage").textContent="";try{await loadWorkspace()}catch(e){setStatus("SYNC ERROR");alert("Workspace load failed: "+e.message)}}
   else{user=null;showAuth()}
