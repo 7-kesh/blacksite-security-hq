@@ -6,7 +6,7 @@ on:
       - "scripts/update-cyber-news.mjs"
       - ".github/workflows/cyber-news.yml"
   schedule:
-    - cron: "30 2 * * *"
+    - cron: "30 1 * * *" # 7:00 AM Asia/Kolkata; scheduled early to allow for GitHub queue delays
     - cron: "0 3 * * 1"
   workflow_dispatch:
     inputs:
