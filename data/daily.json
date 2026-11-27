@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-11-27T06:00:51.137Z",
+  "generatedAt": "2026-11-27T09:47:51.113Z",
   "period": "daily",
   "windowHours": 36,
-  "storyCount": 23,
+  "storyCount": 26,
   "sources": [
     {
       "name": "The Hacker News",
@@ -26,6 +26,76 @@
     }
   ],
   "stories": [
+    {
+      "title": "100,000 Potentially Impacted by Colorado Data Breach",
+      "url": "https://www.securityweek.com/100000-potentially-impacted-by-colorado-data-breach/",
+      "publishedAt": "2026-11-27T09:30:54.000Z",
+      "summary": "Hackers breached the digital identification and document storage application myColorado and accessed user-uploaded data. The post 100,000 Potentially Impacted by Colorado Data Breach appeared first on SecurityWeek .",
+      "category": "Breaches & Ransomware",
+      "source": "SecurityWeek",
+      "urgency": "High attention",
+      "defensiveAction": "Review relevant detections and access logs, validate exposure, rotate affected credentials where appropriate, and rehearse containment and recovery."
+    },
+    {
+      "title": "Microsoft pushes emergency hotpatch to fix Windows Server crashes",
+      "url": "https://www.bleepingcomputer.com/news/microsoft/new-out-of-band-oob-emergency-hotpatch-fixes-windows-server-2025-crashes/",
+      "publishedAt": "2026-11-27T09:08:16.000Z",
+      "summary": "Microsoft has released an emergency hotpatch update to address Windows Server 2025 crashes triggered after installing this month's security hotpatch update (KB5131077). [...]",
+      "category": "Security Industry",
+      "source": "BleepingComputer",
+      "urgency": "Monitor",
+      "defensiveAction": "Validate the primary source and determine whether the development changes your threat model, controls or response playbooks."
+    },
+    {
+      "title": "New NFS2ROOT Linux flaw can let attackers gain root privileges",
+      "url": "https://www.bleepingcomputer.com/news/security/new-nfs2root-linux-flaw-can-let-attackers-gain-root-privileges/",
+      "publishedAt": "2026-11-27T08:06:58.000Z",
+      "summary": "​A 12-year-old critical vulnerability in the Linux kernel's Network File System (NFS) server, tracked as CVE-2026-99362, allows remote attackers to gain root privileges. [...]",
+      "category": "Vulnerabilities & Zero-Days",
+      "source": "BleepingComputer",
+      "urgency": "High attention",
+      "defensiveAction": "Check affected versions and exposure, validate exploitation status, then prioritize vendor patches or mitigations on internet-facing assets."
+    },
+    {
+      "title": "Hex Package Manager Warns of Potential Data Breach",
+      "url": "https://www.securityweek.com/hex-package-manager-warns-of-potential-data-breach/",
+      "publishedAt": "2026-11-27T07:44:49.000Z",
+      "summary": "A vulnerability in hex.pm allowed hackers to run commands on web servers. No evidence of data modification was found, but database reads are not logged. The post Hex Package Manager Warns of Potential Data Breach appeared first on SecurityWeek .",
+      "category": "Vulnerabilities & Zero-Days",
+      "source": "SecurityWeek",
+      "urgency": "High attention",
+      "defensiveAction": "Check affected versions and exposure, validate exploitation status, then prioritize vendor patches or mitigations on internet-facing assets."
+    },
+    {
+      "title": "SAP Confirms Cyberattack, Source Code Reportedly Compromised",
+      "url": "https://www.securityweek.com/sap-confirms-cyberattack-source-code-reportedly-compromised/",
+      "publishedAt": "2026-11-27T07:36:14.000Z",
+      "summary": "SAP has detected suspicious activity on GitHub, where hackers reportedly used stolen employee tokens to copy and alter source code. The post SAP Confirms Cyberattack, Source Code Reportedly Compromised appeared first on SecurityWeek .",
+      "category": "Vulnerabilities & Zero-Days",
+      "source": "SecurityWeek",
+      "urgency": "High attention",
+      "defensiveAction": "Check affected versions and exposure, validate exploitation status, then prioritize vendor patches or mitigations on internet-facing assets."
+    },
+    {
+      "title": "Switzerland Confirms AI-Assisted Cyberattacks Breached Critical Infrastructure Operators",
+      "url": "https://thehackernews.com/2026/11/switzerland-confirms-ai-assisted.html",
+      "publishedAt": "2026-11-27T06:04:20.000Z",
+      "summary": "Attackers using AI agents have broken into computer systems at Swiss organizations in four of five confirmed attacks, the first such cases in the country, the country's cybersecurity agency said yesterday. Three of the attacks targeted critical infrastructure operators, and two of those succeeded, with no major disruptions reported. The victims have not been named, and it is not known who is",
+      "category": "Breaches & Ransomware",
+      "source": "The Hacker News",
+      "urgency": "High attention",
+      "defensiveAction": "Review relevant detections and access logs, validate exposure, rotate affected credentials where appropriate, and rehearse containment and recovery."
+    },
+    {
+      "title": "Unpatched Cacti Zero-Day Enables RCE in Just Four HTTP Requests via Guest Access",
+      "url": "https://thehackernews.com/2026/11/unpatched-cacti-zero-day-enables-rce-in.html",
+      "publishedAt": "2026-11-27T05:48:20.000Z",
+      "summary": "Details have emerged about a new zero-day vulnerability in Cacti, an open-source network monitoring tool, that could be exploited to achieve remote code execution. The proof-of-concept (PoC) exploit, which has yet to be assigned a CVE identifier, has been tracked as 4HTTP2SHELL and 4HTTP2ROOT. \"I found a path from a fresh, unauthenticated HTTP session to command execution as the Cacti server",
+      "category": "Vulnerabilities & Zero-Days",
+      "source": "The Hacker News",
+      "urgency": "High attention",
+      "defensiveAction": "Check affected versions and exposure, validate exploitation status, then prioritize vendor patches or mitigations on internet-facing assets."
+    },
     {
       "title": "OpenAI warns GPT-6.2 Astra will hit usage limits 40% faster because it fixed a bug",
       "url": "https://www.bleepingcomputer.com/news/artificial-intelligence/openai-warns-gpt-62-astra-will-hit-usage-limits-40-percent-faster-because-it-fixed-a-bug/",
@@ -215,46 +285,6 @@
       "source": "BleepingComputer",
       "urgency": "Monitor",
       "defensiveAction": "Hunt for reported indicators and behaviors in telemetry; map techniques to ATT&CK and tune detections."
-    },
-    {
-      "title": "1Password customer data stolen after employee GitHub account breach",
-      "url": "https://www.bleepingcomputer.com/news/security/1password-customer-data-stolen-after-employee-github-account-breach/",
-      "publishedAt": "2026-11-25T21:33:33.000Z",
-      "summary": "1Password has disclosed a data breach after a an employee's corporate GitHub account was hacked and used to deploy malicious code to the company's backend services to steal customer data. [...]",
-      "category": "Breaches & Ransomware",
-      "source": "BleepingComputer",
-      "urgency": "High attention",
-      "defensiveAction": "Review relevant detections and access logs, validate exposure, rotate affected credentials where appropriate, and rehearse containment and recovery."
-    },
-    {
-      "title": "Microsoft: China’s Salt Typhoon hackers are using Artex",
-      "url": "https://therecord.media/microsoft-china-salt-typhoon-using-artex-ai-tool",
-      "publishedAt": "2026-11-25T21:18:00.000Z",
-      "summary": "An AI tool implicated in several high-profile breaches is rapidly being integrated into the hacking suites of groups from China and North Korea, Microsoft said.",
-      "category": "Breaches & Ransomware",
-      "source": "The Record",
-      "urgency": "High attention",
-      "defensiveAction": "Review relevant detections and access logs, validate exposure, rotate affected credentials where appropriate, and rehearse containment and recovery."
-    },
-    {
-      "title": "FIFA says hackers accessed ‘limited set of personal and business information’",
-      "url": "https://therecord.media/fifa-data-breach-limited",
-      "publishedAt": "2026-11-25T20:40:00.000Z",
-      "summary": "The Switzerland-based international governing body for soccer says it's working with relevant authorities and law enforcement to investigate a recent breach.",
-      "category": "Vulnerabilities & Zero-Days",
-      "source": "The Record",
-      "urgency": "High attention",
-      "defensiveAction": "Check affected versions and exposure, validate exploitation status, then prioritize vendor patches or mitigations on internet-facing assets."
-    },
-    {
-      "title": "Italy and Switzerland warn of autonomous AI-driven cyberattacks",
-      "url": "https://www.bleepingcomputer.com/news/security/italy-and-switzerland-warn-of-autonomous-ai-driven-cyberattacks/",
-      "publishedAt": "2026-11-25T19:39:31.000Z",
-      "summary": "Swiss and Italian cybersecurity agencies are warning about automated cyberattacks powered by AI agents targeting organizations in the critical infrastructure sector. [...]",
-      "category": "Breaches & Ransomware",
-      "source": "BleepingComputer",
-      "urgency": "High attention",
-      "defensiveAction": "Review relevant detections and access logs, validate exposure, rotate affected credentials where appropriate, and rehearse containment and recovery."
     }
   ]
 }
