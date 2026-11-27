@@ -1,4 +1,4 @@
-name: Refresh BLACKSITE Cyber News
+name: Refresh BLACKSITE Cyber News # scheduled daily collection and Pages publish
 on:
   push:
     branches: [main]
